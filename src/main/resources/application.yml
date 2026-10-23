@@ -1,0 +1,82 @@
+spring:
+  application:
+    name: spring-kafka-banking-engine
+  datasource:
+    url: jdbc:postgresql://localhost:5432/banking
+    username: banking
+    password: banking
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate.jdbc.time_zone: UTC
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+  kafka:
+    bootstrap-servers: localhost:9092
+    admin:
+      fail-fast: true
+    consumer:
+      group-id: banking-engine
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    producer:
+      acks: all
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      properties:
+        enable.idempotence: true
+    listener:
+      ack-mode: record
+
+banking:
+  outbox:
+    poll-delay: 250ms
+    initial-delay: 2s
+    batch-size: 50
+    publishing-timeout: 30s
+    max-attempts: 8
+  clearing:
+    mode: DETERMINISTIC
+  messaging:
+    partitions: 3
+    replicas: 1
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: when_authorized
+  info:
+    env:
+      enabled: true
+
+info:
+  app:
+    name: spring-kafka-banking-engine
+    description: Event-driven, fault-tolerant financial mock backend
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      clearing:
+        sliding-window-type: COUNT_BASED
+        sliding-window-size: 8
+        minimum-number-of-calls: 4
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 10s
+        permitted-number-of-calls-in-half-open-state: 2
+        record-exceptions:
+          - com.banking.engine.clearing.ClearingUnavailableException
+
+logging:
+  level:
+    com.banking.engine: INFO

@@ -1,0 +1,6 @@
+/home/alex/spring-kafka-banking-engine/src/test/java/com/banking/engine/MoneyTest.java
+/home/alex/spring-kafka-banking-engine/src/test/java/com/banking/engine/account/AccountPostingTest.java
+/home/alex/spring-kafka-banking-engine/src/test/java/com/banking/engine/api/AccountResponseJsonTest.java
+/home/alex/spring-kafka-banking-engine/src/test/java/com/banking/engine/clearing/DeterministicClearingGatewayTest.java
+/home/alex/spring-kafka-banking-engine/src/test/java/com/banking/engine/transfer/TransferFlowTest.java
+/home/alex/spring-kafka-banking-engine/src/test/java/com/banking/engine/transfer/TransferStateMachineTest.java

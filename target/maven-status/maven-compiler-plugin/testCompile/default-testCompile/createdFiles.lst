@@ -1,0 +1,6 @@
+com/banking/engine/clearing/DeterministicClearingGatewayTest.class
+com/banking/engine/api/AccountResponseJsonTest.class
+com/banking/engine/account/AccountPostingTest.class
+com/banking/engine/MoneyTest.class
+com/banking/engine/transfer/TransferFlowTest.class
+com/banking/engine/transfer/TransferStateMachineTest.class
