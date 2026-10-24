@@ -1,0 +1,296 @@
+databaseChangeLog:
+  - changeSet:
+      id: 001-banking-schema
+      author: banking-engine
+      changes:
+        - createSequence:
+            sequenceName: account_number_seq
+            startValue: 10000001
+            incrementBy: 1
+        - createTable:
+            tableName: account
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: account_number
+                  type: varchar(32)
+                  constraints:
+                    nullable: false
+                    unique: true
+                    uniqueConstraintName: uq_account_number
+              - column:
+                  name: holder_name
+                  type: varchar(120)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: currency
+                  type: varchar(3)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status
+                  type: varchar(16)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: available_balance
+                  type: numeric(19, 2)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: timestamptz
+                  constraints:
+                    nullable: false
+              - column:
+                  name: version
+                  type: bigint
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+        - createTable:
+            tableName: transfer
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: idempotency_key
+                  type: varchar(100)
+                  constraints:
+                    nullable: false
+                    unique: true
+                    uniqueConstraintName: uq_transfer_idempotency
+              - column:
+                  name: request_fingerprint
+                  type: varchar(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: source_account_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: destination_account_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: amount
+                  type: numeric(19, 2)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: currency
+                  type: varchar(3)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status
+                  type: varchar(32)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: failure_code
+                  type: varchar(64)
+              - column:
+                  name: failure_reason
+                  type: varchar(500)
+              - column:
+                  name: created_at
+                  type: timestamptz
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: timestamptz
+                  constraints:
+                    nullable: false
+              - column:
+                  name: version
+                  type: bigint
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+        - createTable:
+            tableName: ledger_entry
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: account_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: transfer_id
+                  type: uuid
+              - column:
+                  name: entry_type
+                  type: varchar(16)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: posting_reason
+                  type: varchar(32)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: amount
+                  type: numeric(19, 2)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: balance_after
+                  type: numeric(19, 2)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: timestamptz
+                  constraints:
+                    nullable: false
+        - createTable:
+            tableName: outbox_event
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: topic
+                  type: varchar(200)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: message_key
+                  type: varchar(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: payload
+                  type: text
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status
+                  type: varchar(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: attempts
+                  type: int
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: last_error
+                  type: varchar(500)
+              - column:
+                  name: available_at
+                  type: timestamptz
+                  constraints:
+                    nullable: false
+              - column:
+                  name: claimed_at
+                  type: timestamptz
+              - column:
+                  name: created_at
+                  type: timestamptz
+                  constraints:
+                    nullable: false
+              - column:
+                  name: published_at
+                  type: timestamptz
+        - createTable:
+            tableName: processed_command
+            columns:
+              - column:
+                  name: command_id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: processed_at
+                  type: timestamptz
+                  constraints:
+                    nullable: false
+        - addForeignKeyConstraint:
+            constraintName: fk_transfer_source_account
+            baseTableName: transfer
+            baseColumnNames: source_account_id
+            referencedTableName: account
+            referencedColumnNames: id
+        - addForeignKeyConstraint:
+            constraintName: fk_transfer_destination_account
+            baseTableName: transfer
+            baseColumnNames: destination_account_id
+            referencedTableName: account
+            referencedColumnNames: id
+        - addForeignKeyConstraint:
+            constraintName: fk_ledger_account
+            baseTableName: ledger_entry
+            baseColumnNames: account_id
+            referencedTableName: account
+            referencedColumnNames: id
+        - addForeignKeyConstraint:
+            constraintName: fk_ledger_transfer
+            baseTableName: ledger_entry
+            baseColumnNames: transfer_id
+            referencedTableName: transfer
+            referencedColumnNames: id
+        - addUniqueConstraint:
+            constraintName: uq_ledger_posting
+            tableName: ledger_entry
+            columnNames: transfer_id, account_id, posting_reason
+        - createIndex:
+            indexName: idx_ledger_account_created
+            tableName: ledger_entry
+            columns:
+              - column:
+                  name: account_id
+              - column:
+                  name: created_at
+        - createIndex:
+            indexName: idx_outbox_pending
+            tableName: outbox_event
+            columns:
+              - column:
+                  name: status
+              - column:
+                  name: available_at
+        - createIndex:
+            indexName: idx_transfer_status
+            tableName: transfer
+            columns:
+              - column:
+                  name: status
+        - sql:
+            sql: >
+              ALTER TABLE account
+              ADD CONSTRAINT ck_account_balance_non_negative CHECK (available_balance >= 0)
+        - sql:
+            sql: >
+              ALTER TABLE transfer
+              ADD CONSTRAINT ck_transfer_amount_positive CHECK (amount > 0)
+        - sql:
+            sql: >
+              ALTER TABLE ledger_entry
+              ADD CONSTRAINT ck_ledger_amount_positive CHECK (amount > 0)
