@@ -1,0 +1,9 @@
+banking:
+  outbox:
+    poll-delay: 100ms
+    initial-delay: 200ms
+
+logging:
+  level:
+    root: WARN
+    com.banking.engine: INFO
